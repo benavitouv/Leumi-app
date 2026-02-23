@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>LEUMI AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Splash shown while widget loads -->
+    <div id="splash" class="splash">
+      <div class="splash-orb"></div>
+      <span class="splash-label">LEUMI AI</span>
+    </div>
+
+    <script>
+      (() => {
+        const s = document.createElement('script');
+        s.src = 'https://wonderful.app.demo.wonderful.ai/embed/wonderful-chat.js';
+        s.onload = () => {
+          const chat = new window.WonderfulChat({
+            environment: 'wonderful.api.demo.wonderful.ai',
+            agentId: 'a5141f52-16eb-4255-bdea-d5ca0cb1f8c6',
+
+            agentName: 'LEUMI AI',
+            buttonText: 'LEUMI AI',
+            placeholderText: 'כאן אפשר לכתוב את הפנייה',
+            isRTL: true,
+
+            primaryColor: '#1a5dc8',
+            accentColor: '#0e44a8',
+            textColor: '#1a2332',
+
+            headerBgColor: '#ffffff',
+            headerTextColor: '#1a2332',
+
+            userBubbleColor: '#1a5dc8',
+            userTextColor: '#ffffff',
+            agentBubbleColor: '#ffffff',
+            agentTextColor: '#1a2332',
+
+            windowBgColor: '#eef1f8',
+            messagesBgColor: '#eef1f8',
+            inputBgColor: '#ffffff',
+
+            statusColor: '#1a5dc8',
+            errorColor: '#d32f2f',
+
+            logoUrl: 'bank-logo.png',
+          });
+
+          // Auto-open the chat window and hide splash
+          setTimeout(() => {
+            const btn = document.querySelector(
+              '[class*="wonderful"][class*="button"], [class*="wonderful"][class*="launcher"], [class*="wonderful"][class*="toggle"]'
+            );
+            if (btn) btn.click();
+            // Fallback: try chat.open() if the SDK exposes it
+            if (chat && typeof chat.open === 'function') chat.open();
+            document.getElementById('splash').style.display = 'none';
+          }, 300);
+        };
+        document.head.appendChild(s);
+      })();
+    </script>
+  </body>
+</html>

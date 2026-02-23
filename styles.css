@@ -1,0 +1,340 @@
+/* ======================================================
+   LEUMI AI — Global theme
+   ====================================================== */
+:root {
+  --blue:        #1a5dc8;
+  --blue-dark:   #0e44a8;
+  --blue-soft:   rgba(26, 93, 200, 0.12);
+  --bg:          #eef1f8;
+  --surface:     #ffffff;
+  --border:      #dde3ef;
+  --ink:         #1a2332;
+  --muted:       #8a9bb5;
+  --radius-msg:  20px;
+  --orb-size:    56px;
+  font-family: 'Rubik', system-ui, -apple-system, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--ink);
+  direction: rtl;
+}
+
+/* ======================================================
+   Splash screen (shown while widget script loads)
+   ====================================================== */
+.splash {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: var(--bg);
+  z-index: 1;
+}
+
+.splash-orb {
+  width: var(--orb-size);
+  height: var(--orb-size);
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #8ecfff 0%, #1a5dc8 48%, #0a2880 100%);
+  box-shadow: 0 6px 28px rgba(26, 93, 200, 0.45);
+  animation: orb-pulse 2.2s ease-in-out infinite;
+}
+
+.splash-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+@keyframes orb-pulse {
+  0%, 100% { transform: scale(1);    box-shadow: 0 6px 28px rgba(26, 93, 200, 0.45); }
+  50%       { transform: scale(1.06); box-shadow: 0 10px 40px rgba(26, 93, 200, 0.6); }
+}
+
+/* ======================================================
+   WonderfulChat — full-screen takeover
+   ====================================================== */
+
+/* 1. Hide the floating launcher button */
+[class*="wonderful"][class*="button"],
+[class*="wonderful"][class*="launcher"],
+[class*="wonderful-chat-button"],
+.wonderful-chat-button {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* 2. Chat window → full screen */
+[class*="wonderful"][class*="window"],
+[class*="wonderful-chat-window"],
+.wonderful-chat-window {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100dvw !important;
+  height: 100dvh !important;
+  max-width: 100dvw !important;
+  max-height: 100dvh !important;
+  border-radius: 0 !important;
+  transform: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: var(--bg) !important;
+  box-shadow: none !important;
+  border: none !important;
+  direction: rtl !important;
+  z-index: 9999 !important;
+  overflow: hidden !important;
+}
+
+/* 3. Header */
+[class*="wonderful"][class*="header"],
+.wonderful-chat-header {
+  background: var(--surface) !important;
+  border-bottom: 1px solid var(--border) !important;
+  padding: 10px 20px !important;
+  min-height: 72px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-direction: row-reverse !important;
+  flex-shrink: 0 !important;
+  position: relative !important;
+}
+
+/* Agent info block (logo + name) */
+[class*="wonderful"][class*="agent-info"],
+[class*="wonderful"][class*="agent_info"],
+.wonderful-chat-agent-info {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 4px !important;
+  flex: 1 !important;
+}
+
+/* Logo — turn it into the gradient orb */
+[class*="wonderful"][class*="logo"],
+[class*="wonderful"][class*="avatar"],
+.wonderful-chat-logo,
+.wonderful-chat-avatar,
+.wonderful-chat-header img {
+  width: var(--orb-size) !important;
+  height: var(--orb-size) !important;
+  border-radius: 50% !important;
+  background: radial-gradient(circle at 38% 32%, #8ecfff 0%, #1a5dc8 48%, #0a2880 100%) !important;
+  box-shadow: 0 4px 16px rgba(26, 93, 200, 0.35) !important;
+  object-fit: cover !important;
+  overflow: hidden !important;
+}
+
+/* Agent name */
+[class*="wonderful"][class*="agent-name"],
+[class*="wonderful"][class*="agent_name"],
+[class*="wonderful"][class*="title"],
+.wonderful-chat-agent-name,
+.wonderful-chat-title {
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  color: var(--ink) !important;
+  text-align: center !important;
+  direction: ltr !important;
+}
+
+/* 4. Messages container */
+[class*="wonderful"][class*="messages"],
+.wonderful-chat-messages {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  padding: 20px 16px !important;
+  background: var(--bg) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+  direction: rtl !important;
+  scroll-behavior: smooth;
+}
+
+/* Scrollbar styling */
+[class*="wonderful"][class*="messages"]::-webkit-scrollbar { width: 4px; }
+[class*="wonderful"][class*="messages"]::-webkit-scrollbar-track { background: transparent; }
+[class*="wonderful"][class*="messages"]::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+/* 5. Individual messages */
+[class*="wonderful"][class*="message"],
+.wonderful-message {
+  max-width: 80% !important;
+  direction: rtl !important;
+  line-height: 1.55 !important;
+  font-size: 0.97rem !important;
+  word-break: break-word !important;
+}
+
+/* User messages — blue bubble, pushed to logical-end (visual left in RTL) */
+[class*="wonderful"][class*="message"][class*="user"],
+[class*="wonderful-message--user"],
+[class*="wonderful-message-user"],
+.wonderful-message.user,
+.wonderful-message--user {
+  align-self: flex-end !important;
+  background: var(--blue) !important;
+  color: #ffffff !important;
+  border-radius: var(--radius-msg) var(--radius-msg) 5px var(--radius-msg) !important;
+  padding: 12px 16px !important;
+  box-shadow: 0 2px 10px rgba(26, 93, 200, 0.25) !important;
+  text-align: right !important;
+}
+
+/* Agent messages — white card */
+[class*="wonderful"][class*="message"][class*="agent"],
+[class*="wonderful-message--agent"],
+[class*="wonderful-message-agent"],
+.wonderful-message.agent,
+.wonderful-message--agent {
+  align-self: flex-start !important;
+  background: var(--surface) !important;
+  color: var(--ink) !important;
+  border-radius: var(--radius-msg) var(--radius-msg) var(--radius-msg) 5px !important;
+  padding: 14px 16px !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07) !important;
+  border: 1px solid var(--border) !important;
+  text-align: right !important;
+}
+
+/* Timestamp */
+[class*="wonderful"][class*="time"],
+[class*="wonderful"][class*="timestamp"],
+.wonderful-message-time,
+.wonderful-timestamp {
+  font-size: 0.72rem !important;
+  color: var(--muted) !important;
+  margin-top: 4px !important;
+  text-align: left !important;
+}
+
+/* 6. Input / footer */
+[class*="wonderful"][class*="footer"],
+[class*="wonderful"][class*="input-area"],
+.wonderful-chat-footer {
+  background: var(--surface) !important;
+  border-top: 1px solid var(--border) !important;
+  padding: 10px 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-direction: row-reverse !important;
+  flex-shrink: 0 !important;
+  min-height: 64px !important;
+}
+
+/* Text input */
+[class*="wonderful"][class*="footer"] input,
+[class*="wonderful"][class*="input"]:not([class*="button"]),
+.wonderful-chat-footer input,
+.wonderful-chat-input {
+  flex: 1 !important;
+  background: var(--bg) !important;
+  border: none !important;
+  border-radius: 26px !important;
+  padding: 12px 18px !important;
+  font-size: 0.97rem !important;
+  font-family: 'Rubik', sans-serif !important;
+  color: var(--ink) !important;
+  direction: rtl !important;
+  text-align: right !important;
+  outline: none !important;
+  caret-color: var(--blue) !important;
+}
+
+[class*="wonderful"][class*="footer"] input::placeholder,
+.wonderful-chat-footer input::placeholder {
+  color: var(--muted) !important;
+  font-family: 'Rubik', sans-serif !important;
+}
+
+/* Send button — dark circle with arrow */
+[class*="wonderful"][class*="send"],
+[class*="wonderful"][class*="footer"] button,
+[class*="wonderful"][class*="submit"],
+.wonderful-chat-send,
+.wonderful-chat-footer button {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  border-radius: 50% !important;
+  background: #5a6375 !important;
+  color: #ffffff !important;
+  border: none !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  transition: background 0.18s ease !important;
+  box-shadow: none !important;
+}
+
+[class*="wonderful"][class*="send"]:hover,
+[class*="wonderful"][class*="footer"] button:hover {
+  background: var(--blue) !important;
+}
+
+/* Links inside agent messages (e.g. מעבר לפתיחת פנייה) */
+[class*="wonderful"][class*="message"] a,
+.wonderful-message a {
+  color: var(--blue) !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+}
+
+[class*="wonderful"][class*="message"] a:hover,
+.wonderful-message a:hover {
+  text-decoration: underline !important;
+}
+
+/* Loading / typing indicator */
+[class*="wonderful"][class*="typing"],
+[class*="wonderful"][class*="loading"],
+.wonderful-typing {
+  align-self: flex-start !important;
+  background: var(--surface) !important;
+  border-radius: var(--radius-msg) !important;
+  padding: 12px 16px !important;
+  border: 1px solid var(--border) !important;
+}
+
+/* Status / error bar */
+[class*="wonderful"][class*="status"],
+.wonderful-status {
+  font-size: 0.85rem !important;
+  color: var(--muted) !important;
+  text-align: center !important;
+  padding: 6px !important;
+}
+
+/* ======================================================
+   Responsive — narrow screens
+   ====================================================== */
+@media (max-width: 480px) {
+  [class*="wonderful"][class*="message"],
+  .wonderful-message {
+    max-width: 88% !important;
+  }
+}
