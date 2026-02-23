@@ -166,7 +166,7 @@ body > [class*="wonderful"]:not([class*="window"]) {
   direction: ltr !important;
 }
 
-/* 4. Messages container — scrollable full-height column */
+/* 4. Messages container — scrollable full-height column, centered via padding */
 [class*="wonderful"][class*="messages"],
 .wonderful-chat-messages {
   flex: 1 !important;
@@ -177,20 +177,12 @@ body > [class*="wonderful"]:not([class*="window"]) {
   gap: 14px !important;
   direction: rtl !important;
   scroll-behavior: smooth;
-  /* Center the message column on wide screens */
-  padding: 20px 0 !important;
-  align-items: stretch !important;
-}
-
-/* Inner wrapper: constrain width and center */
-[class*="wonderful"][class*="messages"] > *,
-.wonderful-chat-messages > * {
-  max-width: 680px !important;
-  width: 100% !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-  padding-left: 16px !important;
-  padding-right: 16px !important;
+  align-items: flex-start !important;
+  /* Horizontal padding creates a centered 680px column on wide screens */
+  padding-top: 20px !important;
+  padding-bottom: 20px !important;
+  padding-left:  max(16px, calc((100% - 680px) / 2)) !important;
+  padding-right: max(16px, calc((100% - 680px) / 2)) !important;
 }
 
 /* Scrollbar styling */
@@ -201,17 +193,19 @@ body > [class*="wonderful"]:not([class*="window"]) {
   border-radius: 4px;
 }
 
-/* 5. Individual messages */
+/* 5. Individual messages — size to content, capped at 78% of the column */
 [class*="wonderful"][class*="message"],
 .wonderful-message {
-  max-width: 80% !important;
+  width: fit-content !important;
+  max-width: 78% !important;
+  min-width: 0 !important;
   direction: rtl !important;
   line-height: 1.55 !important;
   font-size: 0.97rem !important;
   word-break: break-word !important;
 }
 
-/* User messages — blue bubble, pushed to logical-end (visual left in RTL) */
+/* User messages — blue bubble, right side of column (flex-end in LTR inside RTL container) */
 [class*="wonderful"][class*="message"][class*="user"],
 [class*="wonderful-message--user"],
 [class*="wonderful-message-user"],
@@ -226,7 +220,7 @@ body > [class*="wonderful"]:not([class*="window"]) {
   text-align: right !important;
 }
 
-/* Agent messages — white card */
+/* Agent messages — white card, left side of column */
 [class*="wonderful"][class*="message"][class*="agent"],
 [class*="wonderful-message--agent"],
 [class*="wonderful-message-agent"],
@@ -359,8 +353,9 @@ body > [class*="wonderful"]:not([class*="window"]) {
    Custom Leumi typing-bubble (injected by app.js)
    ====================================================== */
 .leumi-typing {
-  /* mirrors agent message style */
+  /* mirrors agent message style, sized to content */
   align-self: flex-start;
+  width: fit-content;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-msg) var(--radius-msg) var(--radius-msg) 5px;
@@ -369,7 +364,6 @@ body > [class*="wonderful"]:not([class*="window"]) {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  /* entrance animation */
   animation: typing-appear 0.18s ease-out;
 }
 

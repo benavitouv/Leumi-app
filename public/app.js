@@ -5,11 +5,20 @@
 const MSGS_SELECTOR =
   '[class*="wonderful"][class*="messages"], .wonderful-chat-messages';
 
+// Selectors for the text input and send button inside the widget
+const INPUT_SELECTOR =
+  '[class*="wonderful"][class*="footer"] input, ' +
+  '[class*="wonderful"][class*="input"]:not([class*="button"]), ' +
+  '.wonderful-chat-footer input';
+
+const SEND_BTN_SELECTOR =
+  '[class*="wonderful"][class*="send"], ' +
+  '[class*="wonderful"][class*="submit"], ' +
+  '[class*="wonderful"][class*="footer"] button';
+
 function createTypingBubble() {
   const wrap = document.createElement('div');
   wrap.id = 'leumi-typing';
-  // The > * centering rule in styles.css targets direct children of the
-  // messages container, so this div inherits max-width + auto margins.
   wrap.innerHTML =
     '<div class="leumi-typing">' +
       '<span class="leumi-typing__dot"></span>' +
@@ -20,7 +29,7 @@ function createTypingBubble() {
 }
 
 function showTyping() {
-  if (document.getElementById('leumi-typing')) return; // already shown
+  if (document.getElementById('leumi-typing')) return;
   const container = document.querySelector(MSGS_SELECTOR);
   if (!container) return;
   container.appendChild(createTypingBubble());
@@ -35,22 +44,58 @@ function watchMessages() {
   const container = document.querySelector(MSGS_SELECTOR);
   if (!container) return false;
 
+  // Two-stage counter so the bubble appears AFTER the user's own message
+  // is already in the DOM:
+  //   Stage 0: idle
+  //   Stage 1: user triggered send — waiting for user message node
+  //   Stage 2: user message node seen — typing bubble visible, waiting for agent reply
+  let stage = 0;
+
+  // Called whenever the user triggers a send (Enter key or send-button click)
+  function onSendTriggered() {
+    if (stage !== 0) return; // already in flight
+    stage = 1;
+  }
+
+  // MutationObserver: every new DOM node that isn't our own bubble counts
   const observer = new MutationObserver((mutations) => {
     for (const mut of mutations) {
       for (const node of mut.addedNodes) {
         if (node.nodeType !== 1 || node.id === 'leumi-typing') continue;
-        if (/user/i.test(node.className)) {
-          // User just sent — show typing indicator
+
+        if (stage === 1) {
+          // First new node = user's message. Show bubble and advance.
+          stage = 2;
           showTyping();
-        } else if (/agent|bot|assistant/i.test(node.className)) {
-          // Agent replied — remove indicator
+        } else if (stage === 2) {
+          // Second new node = agent's reply. Hide bubble and reset.
           hideTyping();
+          stage = 0;
         }
       }
     }
   });
-
   observer.observe(container, { childList: true });
+
+  // Attach send-event listeners via delegation on the widget window
+  const chatWindow = document.querySelector(WINDOW_SELECTOR);
+  if (chatWindow) {
+    // Enter key in the input field
+    chatWindow.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
+      const input = e.target.closest('input, textarea');
+      if (input && input.value.trim()) onSendTriggered();
+    }, true);
+
+    // Click on the send / submit button
+    chatWindow.addEventListener('click', (e) => {
+      if (e.target.closest(SEND_BTN_SELECTOR)) {
+        const input = chatWindow.querySelector(INPUT_SELECTOR);
+        if (input && input.value.trim()) onSendTriggered();
+      }
+    }, true);
+  }
+
   return true;
 }
 
