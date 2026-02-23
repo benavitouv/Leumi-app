@@ -59,36 +59,6 @@ function renderLinks(el) {
   });
 }
 
-/* ── Phone button ───────────────────────────────────────────────────────── */
-
-const PHONE_NUMBER = 'tel:+97293762524';
-const HEADER_SELECTOR =
-  '[class*="wonderful"][class*="header"], .wonderful-chat-header';
-
-function injectPhoneButton() {
-  if (document.getElementById('leumi-phone-btn')) return true;
-  const header = document.querySelector(HEADER_SELECTOR);
-  if (!header) return false;
-
-  const btn = document.createElement('a');
-  btn.id = 'leumi-phone-btn';
-  btn.href = PHONE_NUMBER;
-  btn.setAttribute('aria-label', 'התקשר לסוכן');
-  // Phone handset SVG (Feather Icons / Lucide style)
-  btn.innerHTML =
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
-    'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ' +
-    'aria-hidden="true">' +
-    '<path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 ' +
-    '19.5 19.5 0 01-5.99-5.99 19.79 19.79 0 01-3.07-8.67A2 2 0 014 2h3a2 2 0 ' +
-    '012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 ' +
-    '6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>' +
-    '</svg>';
-
-  header.appendChild(btn);
-  return true;
-}
-
 /* ── Typing bubble ───────────────────────────────────────────────────────── */
 
 const MSGS_SELECTOR =
@@ -249,7 +219,6 @@ function tryOpenWidget() {
 }
 
 let watchingMessages = false;
-let phoneInjected = false;
 
 function poll() {
   hideLaunchers();
@@ -257,10 +226,9 @@ function poll() {
     setInterval(hideLaunchers, 500);
   }
 
-  if (!phoneInjected) phoneInjected = injectPhoneButton();
   if (!watchingMessages) watchingMessages = watchMessages();
 
-  if ((!watchingMessages || !phoneInjected) && ++polls < MAX_POLLS) {
+  if (!watchingMessages && ++polls < MAX_POLLS) {
     setTimeout(poll, POLL_INTERVAL);
   }
 }
