@@ -1,6 +1,95 @@
 // app.js — Leumi AI chat initialisation helper
 
-/* ── Typing bubble ─────────────────────────────────────────────────────── */
+/* ── Markdown link renderer ─────────────────────────────────────────────── */
+
+// Matches [label](url) OR bare https?:// URLs in a single pass.
+// Group 1+2 = markdown link, group 3 = bare URL.
+const LINK_RE = /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)|(https?:\/\/[^\s<>"')\]]+)/g;
+
+/**
+ * Walk every text node inside `el` and replace markdown link syntax and
+ * bare URLs with real <a> elements.  Safe — no innerHTML with user content.
+ */
+function renderLinks(el) {
+  if (!el || el.id === 'leumi-typing') return;
+
+  // Collect text nodes first (TreeWalker is invalidated by DOM mutations)
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  const textNodes = [];
+  let n;
+  while ((n = walker.nextNode())) textNodes.push(n);
+
+  textNodes.forEach((textNode) => {
+    const raw = textNode.nodeValue;
+    // Quick bail-out — no URL-like content
+    if (!raw.includes('http')) return;
+
+    LINK_RE.lastIndex = 0;
+    let match;
+    let lastIdx = 0;
+    const frag = document.createDocumentFragment();
+    let replaced = false;
+
+    while ((match = LINK_RE.exec(raw)) !== null) {
+      replaced = true;
+      if (match.index > lastIdx) {
+        frag.appendChild(document.createTextNode(raw.slice(lastIdx, match.index)));
+      }
+      const a = document.createElement('a');
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      if (match[1] && match[2]) {
+        // Markdown link: [label](url)
+        a.href = match[2];
+        a.textContent = match[1];
+      } else {
+        // Bare URL
+        a.href = match[3];
+        a.textContent = match[3];
+      }
+      frag.appendChild(a);
+      lastIdx = match.index + match[0].length;
+    }
+
+    if (!replaced) return;
+    if (lastIdx < raw.length) {
+      frag.appendChild(document.createTextNode(raw.slice(lastIdx)));
+    }
+    textNode.parentNode.replaceChild(frag, textNode);
+  });
+}
+
+/* ── Phone button ───────────────────────────────────────────────────────── */
+
+const PHONE_NUMBER = 'tel:+97293762524';
+const HEADER_SELECTOR =
+  '[class*="wonderful"][class*="header"], .wonderful-chat-header';
+
+function injectPhoneButton() {
+  if (document.getElementById('leumi-phone-btn')) return true;
+  const header = document.querySelector(HEADER_SELECTOR);
+  if (!header) return false;
+
+  const btn = document.createElement('a');
+  btn.id = 'leumi-phone-btn';
+  btn.href = PHONE_NUMBER;
+  btn.setAttribute('aria-label', 'התקשר לסוכן');
+  // Phone handset SVG (Feather Icons / Lucide style)
+  btn.innerHTML =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+    'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ' +
+    'aria-hidden="true">' +
+    '<path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 ' +
+    '19.5 19.5 0 01-5.99-5.99 19.79 19.79 0 01-3.07-8.67A2 2 0 014 2h3a2 2 0 ' +
+    '012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 ' +
+    '6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>' +
+    '</svg>';
+
+  header.appendChild(btn);
+  return true;
+}
+
+/* ── Typing bubble ───────────────────────────────────────────────────────── */
 
 const MSGS_SELECTOR =
   '[class*="wonderful"][class*="messages"], .wonderful-chat-messages';
@@ -65,11 +154,18 @@ function watchMessages() {
     safetyTimer = setTimeout(resetStage, 20000);
   }
 
+  // Apply to messages already in the DOM when observation starts
+  container.querySelectorAll('[class*="message"], [class*="msg"]').forEach(renderLinks);
+
   // MutationObserver on the messages container
   const observer = new MutationObserver((mutations) => {
     for (const mut of mutations) {
       for (const node of mut.addedNodes) {
         if (node.nodeType !== 1 || node.id === 'leumi-typing') continue;
+
+        // Render markdown / bare URLs in every new message node
+        renderLinks(node);
+
         if (stage === 1) {
           // First new node = user's own message bubble → show typing
           stage = 2;
@@ -153,20 +249,18 @@ function tryOpenWidget() {
 }
 
 let watchingMessages = false;
+let phoneInjected = false;
 
 function poll() {
   hideLaunchers();
   if (tryOpenWidget()) {
-    // Keep hiding in case the widget re-shows the button
     setInterval(hideLaunchers, 500);
   }
 
-  // Start watching messages as soon as the container exists
-  if (!watchingMessages) {
-    watchingMessages = watchMessages();
-  }
+  if (!phoneInjected) phoneInjected = injectPhoneButton();
+  if (!watchingMessages) watchingMessages = watchMessages();
 
-  if (!watchingMessages && ++polls < MAX_POLLS) {
+  if ((!watchingMessages || !phoneInjected) && ++polls < MAX_POLLS) {
     setTimeout(poll, POLL_INTERVAL);
   }
 }
