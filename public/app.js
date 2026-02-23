@@ -44,57 +44,62 @@ function watchMessages() {
   const container = document.querySelector(MSGS_SELECTOR);
   if (!container) return false;
 
-  // Two-stage counter so the bubble appears AFTER the user's own message
-  // is already in the DOM:
-  //   Stage 0: idle
-  //   Stage 1: user triggered send — waiting for user message node
-  //   Stage 2: user message node seen — typing bubble visible, waiting for agent reply
+  // Two-stage counter:
+  //   0 = idle
+  //   1 = send fired, waiting for user message node to land in DOM
+  //   2 = user message seen, typing bubble visible, waiting for agent reply
   let stage = 0;
+  let safetyTimer = null;
 
-  // Called whenever the user triggers a send (Enter key or send-button click)
-  function onSendTriggered() {
-    if (stage !== 0) return; // already in flight
-    stage = 1;
+  function resetStage() {
+    clearTimeout(safetyTimer);
+    safetyTimer = null;
+    hideTyping();
+    stage = 0;
   }
 
-  // MutationObserver: every new DOM node that isn't our own bubble counts
+  function onSendTriggered() {
+    if (stage !== 0) return;
+    stage = 1;
+    // Safety net: if the agent never replies (e.g. empty send), reset after 20s
+    safetyTimer = setTimeout(resetStage, 20000);
+  }
+
+  // MutationObserver on the messages container
   const observer = new MutationObserver((mutations) => {
     for (const mut of mutations) {
       for (const node of mut.addedNodes) {
         if (node.nodeType !== 1 || node.id === 'leumi-typing') continue;
-
         if (stage === 1) {
-          // First new node = user's message. Show bubble and advance.
+          // First new node = user's own message bubble → show typing
           stage = 2;
           showTyping();
         } else if (stage === 2) {
-          // Second new node = agent's reply. Hide bubble and reset.
-          hideTyping();
-          stage = 0;
+          // Second new node = agent reply → hide typing
+          resetStage();
         }
       }
     }
   });
   observer.observe(container, { childList: true });
 
-  // Attach send-event listeners via delegation on the widget window
-  const chatWindow = document.querySelector(WINDOW_SELECTOR);
-  if (chatWindow) {
-    // Enter key in the input field
-    chatWindow.addEventListener('keydown', (e) => {
-      if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
-      const input = e.target.closest('input, textarea');
-      if (input && input.value.trim()) onSendTriggered();
-    }, true);
+  // Use document-level CAPTURE listeners so we fire before the widget's
+  // own handlers, and don't rely on input.value (which may already be
+  // cleared by the time we read it).
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
+    const chatWindow = document.querySelector(WINDOW_SELECTOR);
+    if (!chatWindow) return;
+    if (!chatWindow.contains(document.activeElement)) return;
+    const tag = document.activeElement.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') onSendTriggered();
+  }, true);
 
-    // Click on the send / submit button
-    chatWindow.addEventListener('click', (e) => {
-      if (e.target.closest(SEND_BTN_SELECTOR)) {
-        const input = chatWindow.querySelector(INPUT_SELECTOR);
-        if (input && input.value.trim()) onSendTriggered();
-      }
-    }, true);
-  }
+  document.addEventListener('click', (e) => {
+    const chatWindow = document.querySelector(WINDOW_SELECTOR);
+    if (!chatWindow || !chatWindow.contains(e.target)) return;
+    if (e.target.closest(SEND_BTN_SELECTOR)) onSendTriggered();
+  }, true);
 
   return true;
 }
@@ -131,13 +136,15 @@ function hideLaunchers() {
 }
 
 let polls = 0;
+let hasOpenedWidget = false;
 
 function tryOpenWidget() {
+  if (hasOpenedWidget) return true;
   for (const sel of LAUNCHER_SELECTORS) {
     const el = document.querySelector(sel);
     if (el && !el.closest(WINDOW_SELECTOR)) {
       el.click();
-      // Immediately hide it again after the click opens the window
+      hasOpenedWidget = true;
       setTimeout(hideLaunchers, 50);
       return true;
     }
