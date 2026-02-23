@@ -65,13 +65,24 @@ html, body {
    WonderfulChat — full-screen takeover
    ====================================================== */
 
-/* 1. Hide the floating launcher button */
+/* 1. Hide the floating launcher / FAB button — cast a wide net */
 [class*="wonderful"][class*="button"],
 [class*="wonderful"][class*="launcher"],
+[class*="wonderful"][class*="toggle"],
+[class*="wonderful"][class*="fab"],
+[class*="wonderful"][class*="trigger"],
 [class*="wonderful-chat-button"],
 .wonderful-chat-button {
   display: none !important;
   visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+/* Extra: any direct child of <body> from wonderful that is NOT the main window */
+body > [class*="wonderful"]:not([class*="window"]) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
   pointer-events: none !important;
 }
 
@@ -155,18 +166,31 @@ html, body {
   direction: ltr !important;
 }
 
-/* 4. Messages container */
+/* 4. Messages container — scrollable full-height column */
 [class*="wonderful"][class*="messages"],
 .wonderful-chat-messages {
   flex: 1 !important;
   overflow-y: auto !important;
-  padding: 20px 16px !important;
   background: var(--bg) !important;
   display: flex !important;
   flex-direction: column !important;
   gap: 14px !important;
   direction: rtl !important;
   scroll-behavior: smooth;
+  /* Center the message column on wide screens */
+  padding: 20px 0 !important;
+  align-items: stretch !important;
+}
+
+/* Inner wrapper: constrain width and center */
+[class*="wonderful"][class*="messages"] > *,
+.wonderful-chat-messages > * {
+  max-width: 680px !important;
+  width: 100% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
 }
 
 /* Scrollbar styling */
@@ -235,13 +259,24 @@ html, body {
 .wonderful-chat-footer {
   background: var(--surface) !important;
   border-top: 1px solid var(--border) !important;
-  padding: 10px 16px !important;
+  padding: 10px 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  min-height: 64px !important;
+}
+
+/* Center the footer's inner content */
+[class*="wonderful"][class*="footer"] > *,
+.wonderful-chat-footer > * {
+  max-width: 680px !important;
+  width: 100% !important;
   display: flex !important;
   align-items: center !important;
   gap: 10px !important;
   flex-direction: row-reverse !important;
-  flex-shrink: 0 !important;
-  min-height: 64px !important;
+  padding: 0 16px !important;
 }
 
 /* Text input */
@@ -309,7 +344,7 @@ html, body {
   text-decoration: underline !important;
 }
 
-/* Loading / typing indicator */
+/* Loading / typing indicator (widget-native) */
 [class*="wonderful"][class*="typing"],
 [class*="wonderful"][class*="loading"],
 .wonderful-typing {
@@ -318,6 +353,53 @@ html, body {
   border-radius: var(--radius-msg) !important;
   padding: 12px 16px !important;
   border: 1px solid var(--border) !important;
+}
+
+/* ======================================================
+   Custom Leumi typing-bubble (injected by app.js)
+   ====================================================== */
+.leumi-typing {
+  /* mirrors agent message style */
+  align-self: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-msg) var(--radius-msg) var(--radius-msg) 5px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+  padding: 14px 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  /* entrance animation */
+  animation: typing-appear 0.18s ease-out;
+}
+
+@keyframes typing-appear {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.leumi-typing__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--muted);
+  animation: typing-bounce 1.3s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.leumi-typing__dot:nth-child(1) { animation-delay: 0s; }
+.leumi-typing__dot:nth-child(2) { animation-delay: 0.18s; }
+.leumi-typing__dot:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes typing-bounce {
+  0%, 55%, 100% {
+    transform: translateY(0);
+    background: var(--muted);
+  }
+  27% {
+    transform: translateY(-7px);
+    background: var(--blue);
+  }
 }
 
 /* Status / error bar */
